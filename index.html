@@ -1,53 +1,285 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatSwipe</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<title>Котята: Tinder Mode</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  #wrapper {
+    margin-top: 40px;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    width: 350px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .card {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.2);
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+    touch-action: none;
+  }
+  img { width: 100%; display: block; }
+  #likeBtn {
+    width: 60px; height: 60px; border-radius: 50%; border: none;
+    background: #eee; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; margin: 15px auto; transition: 0.2s; font-size: 28px; user-select: none;
+  }
+  #likeBtn.liked { background: #ff3366; color: white; transform: scale(1.15); }
+  #likeBtn:hover { transform: scale(1.1); }
+  #nextBtn {
+    background: #ff6699; color: white; margin-top: 15px; padding: 12px 20px; border: none;
+    border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.15s;
+  }
+  #nextBtn:hover { background: #ff4477; }
+  .like-tag { position: absolute; top: 10px; left: 10px; background: #ff3366; color: white;
+    padding: 6px 12px; font-size: 18px; border-radius: 10px; opacity: 0; transform: rotate(-20deg);
+    transition: 0.2s;
+  }
+  .dislike-tag { position: absolute; top: 10px; right: 10px; background: #666; color: white;
+    padding: 6px 12px; font-size: 18px; border-radius: 10px; opacity: 0; transform: rotate(20deg);
+    transition: 0.2s;
+  }
+  #profile {
+    display: flex; align-items: center; gap: 10px; margin-top: 20px;
+    background: #fff; padding: 10px 15px; border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; position: relative;
+  }
+  #profile img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+  #profile div { flex: 1; }
+  #username { font-weight: bold; cursor: pointer; }
+  #level { font-size: 14px; color: #555; margin: 2px 0; }
+  #progressBar { width: 100%; height: 8px; background: #eee; border-radius: 8px; overflow: hidden; }
+  #progressFill { width: 0%; height: 100%; background: #ff3366; transition: width 0.3s; }
+  #likesToNext { font-size: 12px; color: #555; margin-top: 4px; }
+  #settingsBtn {
+    position: absolute; right: 10px; top: 10px; border: none; background: #ddd;
+    border-radius: 12px; cursor: pointer; padding: 6px 10px; transition: 0.15s;
+  }
+  #settingsBtn:hover { background: #ccc; }
+  #settingsPanel {
+    display: none; margin-top: 10px; background: #fafafa; padding: 10px; border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 350px;
+  }
+  #settingsPanel input { width: 80%; padding: 4px 6px; margin-bottom: 6px; border-radius: 6px; border: 1px solid #ccc; }
+  #settingsPanel button { margin-top: 4px; padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; background: #ff6699; color: white; }
+  #settingsPanel button:hover { background: #ff4477; }
+</style>
 </head>
 <body>
 
-<div id="card-container">
-    <div id="cat-card">
-        <img id="cat-img" src="" alt="Котёнок">
-    </div>
+<div id="profile">
+  <img id="avatar" src="https://i.pravatar.cc/80" alt="avatar" />
+  <div>
+    <div id="username">Пользователь</div>
+    <div id="level">Новичок</div>
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="likesToNext"></div>
+  </div>
+  <button id="settingsBtn">⚙️</button>
 </div>
 
-<div id="pc-buttons">
-    <button id="dislikeBtn">✖</button>
-    <button id="likeBtn">❤</button>
+<div id="settingsPanel">
+  <div><label>Имя: <input type="text" id="nameInput" /></label></div>
+  <div>
+    <label>Аватар URL: <input type="text" id="avatarInput" placeholder="URL картинки" /></label>
+    <button id="randomAvatarBtn">🎲 Случайный</button>
+  </div>
+  <div>
+    <label>Свой аватар: <input type="file" id="fileAvatar" accept="image/*" /></label>
+  </div>
+  <div><button id="resetLikesBtn">Сбросить лайки</button></div>
+  <div><button id="saveSettingsBtn">💾 Сохранить</button></div>
 </div>
 
-<script src="script.js"></script>
+<div id="wrapper">
+  <div id="card" class="card">
+    <span id="likeTag" class="like-tag">LIKE</span>
+    <span id="dislikeTag" class="dislike-tag">NOPE</span>
+    <img id="cat" src="" alt="котёнок" />
+  </div>
+  <button id="likeBtn" onclick="toggleLike()">♡</button>
+  <button id="nextBtn" onclick="loadCat()">Ещё котёнка</button>
+</div>
+
+<script>
+let currentCatId=null, fancyEffectsUsed=0, MAX_FANCY=4;
+
+function getLikes(){ return JSON.parse(localStorage.getItem("likes")||"[]"); }
+function saveLikes(arr){ localStorage.setItem("likes", JSON.stringify(arr)); }
+function isLiked(id){ return getLikes().includes(id); }
+
+function toggleLike(){
+  if(!currentCatId) return;
+  let likes=getLikes();
+  if(likes.includes(currentCatId)) likes=likes.filter(x=>x!==currentCatId);
+  else { likes.push(currentCatId); animateHeart(); }
+  saveLikes(likes);
+  updateLikeUI();
+  updateProgress();
+}
+
+function updateLikeUI(){
+  const btn=document.getElementById("likeBtn");
+  const liked=isLiked(currentCatId);
+  btn.classList.toggle("liked",liked);
+  btn.textContent = liked?"❤️":"♡";
+}
+
+function animateHeart(){
+  const btn=document.getElementById("likeBtn");
+  btn.style.transform="scale(1.3)";
+  setTimeout(()=>btn.style.transform="",150);
+}
+
+const usernameElem=document.getElementById("username");
+const levelElem=document.getElementById("level");
+const progressFill=document.getElementById("progressFill");
+const likesToNext=document.getElementById("likesToNext");
+const avatar=document.getElementById("avatar");
+
+function loadProfile(){
+  usernameElem.textContent=localStorage.getItem("username")||"Пользователь";
+  const savedAvatar=localStorage.getItem("avatar");
+  if(savedAvatar) avatar.src=savedAvatar;
+  updateProgress();
+}
+
+function updateProgress(){
+  const likesCount=getLikes().length;
+  let level="Новичок", percent=0, likesForNext=0;
+  if(likesCount>=500){ level="Легенда котиков"; percent=100; likesForNext=0; }
+  else if(likesCount>=360){ level="Гранд Мастер"; percent=likesCount/500*100; likesForNext=500-likesCount; }
+  else if(likesCount>=120){ level="Мастер"; percent=likesCount/500*100; likesForNext=360-likesCount; }
+  else if(likesCount>=40){ level="Любитель"; percent=likesCount/500*100; likesForNext=120-likesCount; }
+  else { level="Новичок"; percent=likesCount/40*10; likesForNext=40-likesCount; }
+  levelElem.textContent=level;
+  progressFill.style.width=percent+"%";
+  likesToNext.textContent = likesForNext>0?`Лайков до следующего уровня: ${likesForNext}`:"Вы достигли максимального уровня!";
+}
+
+usernameElem.addEventListener("click",()=>{
+  const newName=prompt("Введите имя:",usernameElem.textContent);
+  if(newName){ localStorage.setItem("username",newName); usernameElem.textContent=newName; }
+});
+
+loadProfile();
+
+// ----------------- ЗАГРУЗКА КОТИКА -----------------
+async function loadCat(){
+  try{
+    const resp=await fetch("https://api.thecatapi.com/v1/images/search");
+    const data=await resp.json();
+    const cat=data[0];
+    currentCatId=cat.id;
+    document.getElementById("cat").src=cat.url;
+    updateLikeUI();
+  }catch(e){ alert("Не удалось загрузить котёнка 😿\n"+e); }
+}
+loadCat();
+
+// ----------------- TINDER-СВАЙПЫ -----------------
+const card=document.getElementById("card");
+const likeTag=document.getElementById("likeTag");
+const dislikeTag=document.getElementById("dislikeTag");
+let startX=0,currentX=0,dragging=false;
+function startDrag(x){ dragging=true; startX=x; card.style.transition="none"; }
+function moveDrag(x){
+  if(!dragging) return;
+  currentX=x-startX;
+  card.style.transform=`translateX(${currentX}px) rotate(${currentX/20}deg)`;
+  likeTag.style.opacity=currentX>60?1:0;
+  dislikeTag.style.opacity=currentX<-60?1:0;
+}
+function endDrag(){
+  if(!dragging) return; dragging=false;
+  const abs=Math.abs(currentX), direction=currentX>0?"right":"left";
+  card.style.transition="0.25s ease-out";
+  if(abs>120){
+    if(fancyEffectsUsed<MAX_FANCY){
+      fancyEffectsUsed++;
+      card.style.transform=`translateX(${direction==="right"?400:-400}px) rotate(${direction==="right"?25:-25}deg)`;
+      if(direction==="right") toggleLike();
+      setTimeout(()=>{ resetCard(); loadCat(); },250);
+    }else{
+      if(direction==="right") toggleLike();
+      loadCat();
+      resetSimple();
+    }
+  }else resetCard();
+}
+function resetCard(){ card.style.transition="0.25s ease-out"; card.style.transform="translateX(0) rotate(0)"; likeTag.style.opacity=0; dislikeTag.style.opacity=0; }
+function resetSimple(){ card.style.transition="none"; card.style.transform="translateX(0) rotate(0)"; likeTag.style.opacity=0; dislikeTag.style.opacity=0; }
+card.addEventListener("touchstart",e=>startDrag(e.touches[0].clientX));
+card.addEventListener("touchmove",e=>moveDrag(e.touches[0].clientX));
+card.addEventListener("touchend",endDrag);
+
+// ----------------- НАСТРОЙКИ -----------------
+const settingsBtn=document.getElementById("settingsBtn");
+const settingsPanel=document.getElementById("settingsPanel");
+const nameInput=document.getElementById("nameInput");
+const avatarInput=document.getElementById("avatarInput");
+const randomAvatarBtn=document.getElementById("randomAvatarBtn");
+const fileAvatar=document.getElementById("fileAvatar");
+const resetLikesBtn=document.getElementById("resetLikesBtn");
+const saveSettingsBtn=document.getElementById("saveSettingsBtn");
+
+settingsBtn.addEventListener("click",()=>{
+  settingsPanel.style.display=settingsPanel.style.display==="none"?"block":"none";
+  nameInput.value=localStorage.getItem("username")||"Пользователь";
+  avatarInput.value=avatar.src;
+});
+
+randomAvatarBtn.addEventListener("click",()=>{
+  const url=`https://i.pravatar.cc/80?u=${Math.floor(Math.random()*1000)}`;
+  avatarInput.value=url;
+  avatar.src=url;
+  localStorage.setItem("avatar",url);
+});
+
+fileAvatar.addEventListener("change",(e)=>{
+  const file=e.target.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      avatar.src=ev.target.result;
+      avatarInput.value=ev.target.result;
+      localStorage.setItem("avatar",ev.target.result);
+    }
+    reader.readAsDataURL(file);
+  }
+});
+
+resetLikesBtn.addEventListener("click",()=>{
+  localStorage.removeItem("likes");
+  updateLikeUI();
+  updateProgress();
+});
+
+saveSettingsBtn.addEventListener("click",()=>{
+  const name=nameInput.value.trim();
+  if(name){ usernameElem.textContent=name; localStorage.setItem("username",name); }
+  const avatarUrl=avatarInput.value.trim();
+  if(avatarUrl){ avatar.src=avatarUrl; localStorage.setItem("avatar",avatarUrl); }
+  alert("Настройки сохранены ✅");
+  settingsPanel.style.display="none";
+});
+</script>
 </body>
-</html>    let currentX = 0;
-    let dragging = false;
-
-    card.addEventListener("touchstart", (e) => {
-      dragging = true;
-      startX = e.touches[0].clientX;
-    });
-
-    card.addEventListener("touchmove", (e) => {
-      if (!dragging) return;
-      currentX = e.touches[0].clientX - startX;
-      card.style.transform = `translateX(${currentX}px) rotate(${currentX / 20}deg)`;
-    });
-
-    card.addEventListener("touchend", () => {
-      if (!dragging) return;
-      dragging = false;
-
-      if (currentX > 120) {
-        animateLike();
-        nextCat();
-      } else {
-        card.style.transform = "translateX(0) rotate(0)";
-      }
-    });
-
-    loadCat();
-  </script>
-</body>
-</html>
+      </html>
