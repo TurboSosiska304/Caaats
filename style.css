@@ -1,0 +1,65 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #f2f2f2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+#card-container {
+    margin-top: 20px;
+    width: 90%;
+    max-width: 350px;
+    height: 60%;
+    position: relative;
+}
+
+#cat-card {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+#cat-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#pc-buttons {
+    margin-top: 25px;
+    display: flex;
+    gap: 20px;
+}
+
+#pc-buttons button {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    font-size: 28px;
+    border: none;
+    cursor: pointer;
+    background: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    transition: transform 0.1s ease;
+}
+
+#pc-buttons button:active {
+    transform: scale(0.85);
+}
+
+/* На телефонах кнопки не нужны */
+@media (pointer: coarse) {
+    #pc-buttons {
+        display: none;
+    }
+}
